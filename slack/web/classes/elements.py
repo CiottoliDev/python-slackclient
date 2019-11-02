@@ -1,9 +1,9 @@
 import random
 import re
 import string
+import warnings
 from abc import ABCMeta
 from typing import List, Optional, Set, Union
-import warnings
 
 from . import EnumValidator, JsonObject, JsonValidator, extract_json
 from .objects import ButtonStyles, ConfirmObject, Option, OptionGroup, PlainTextObject
@@ -99,14 +99,14 @@ class ButtonElement(InteractiveElement):
     value_max_length = 2000
 
     def __init__(
-        self,
-        *,
-        text: str,
-        action_id: str,
-        url: str = None,
-        value: str = None,
-        style: Optional[str] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            text: str,
+            action_id: str,
+            url: str = None,
+            value: str = None,
+            style: Optional[str] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         An interactive element that inserts a button. The button can be a trigger for
@@ -181,12 +181,12 @@ class AbstractSelector(InteractiveElement, metaclass=ABCMeta):
     placeholder_max_length = 150
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        subtype: str,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            subtype: str,
+            confirm: Optional[ConfirmObject] = None,
     ):
         super().__init__(action_id=action_id, subtype=subtype)
         self.placeholder = placeholder
@@ -198,7 +198,7 @@ class AbstractSelector(InteractiveElement, metaclass=ABCMeta):
     def placeholder_length(self):
         return len(self.placeholder) <= self.placeholder_max_length
 
-    def to_dict(self,) -> dict:
+    def to_dict(self, ) -> dict:
         json = super().to_dict()
         json["placeholder"] = PlainTextObject.direct_from_string(self.placeholder)
         if self.confirm is not None:
@@ -211,14 +211,14 @@ class StaticSelectElement(AbstractSelector):
     option_groups_max_length = 100
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        options: Optional[List[Option]] = None,
-        option_groups: Optional[List[OptionGroup]] = None,
-        initial_option: Optional[Option] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            options: Optional[List[Option]] = None,
+            option_groups: Optional[List[OptionGroup]] = None,
+            initial_option: Optional[Option] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This is the simplest form of select menu, with a static list of options passed in when defining the element.
@@ -259,8 +259,8 @@ class StaticSelectElement(AbstractSelector):
     )
     def option_groups_length(self):
         return (
-            self.option_groups is None
-            or len(self.option_groups) <= self.option_groups_max_length
+                self.option_groups is None
+                or len(self.option_groups) <= self.option_groups_max_length
         )
 
     @JsonValidator(f"options and option_groups cannot both be specified")
@@ -287,14 +287,14 @@ class StaticMultiSelectElement(AbstractSelector):
     option_groups_max_length = 100
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        options: Optional[List[Option]] = None,
-        option_groups: Optional[List[OptionGroup]] = None,
-        initial_options: Optional[List[Option]] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            options: Optional[List[Option]] = None,
+            option_groups: Optional[List[OptionGroup]] = None,
+            initial_options: Optional[List[Option]] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This is the simplest form of select menu, with a static list of options passed in when defining the element.
@@ -350,7 +350,7 @@ class StaticMultiSelectElement(AbstractSelector):
             json["option_groups"] = extract_json(self.option_groups, "block")
         else:
             json["options"] = extract_json(self.options, "block")
-        if self.initial_option is not None:
+        if self.initial_options is not None:
             json["initial_options"] = extract_json(self.initial_options, "block")
         return json
 
@@ -359,13 +359,13 @@ class SelectElement(AbstractSelector):
     options_max_length = 100
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        options: List[Union[Option, OptionGroup]],
-        initial_option: Optional[Option] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            options: List[Union[Option, OptionGroup]],
+            initial_option: Optional[Option] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This is the simplest form of select menu, with a static list of options
@@ -420,13 +420,13 @@ class ExternalDataSelectElement(AbstractSelector):
         return super().attributes.union({"min_query_length"})
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_option: Union[Optional[Option], Optional[OptionGroup]] = None,
-        min_query_length: Optional[int] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_option: Union[Optional[Option], Optional[OptionGroup]] = None,
+            min_query_length: Optional[int] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will load its options from an external data source, allowing
@@ -471,13 +471,13 @@ class ExternalDataMultiSelectElement(AbstractSelector):
         return super().attributes.union({"min_query_length"})
 
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_options: Union[Optional[Option], Optional[OptionGroup]] = None,
-        min_query_length: Optional[int] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_options: Union[Optional[Option], Optional[OptionGroup]] = None,
+            min_query_length: Optional[int] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will load its options from an external data source, allowing
@@ -506,24 +506,24 @@ class ExternalDataMultiSelectElement(AbstractSelector):
             placeholder=placeholder,
             confirm=confirm,
         )
-        self.initial_option = initial_options
+        self.initial_options = initial_options
         self.min_query_length = min_query_length
 
     def to_dict(self) -> dict:
         json = super().to_dict()
-        if self.initial_option is not None:
+        if self.initial_options is not None:
             json["initial_options"] = extract_json(self.initial_options, "block")
         return json
 
 
 class UserSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_user: Optional[str] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_user: Optional[str] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of Slack users visible to
@@ -544,19 +544,19 @@ class UserSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="users_select",
-            initial_user=initial_user,
             confirm=confirm,
         )
+        self.initial_user = initial_user,
 
 
 class UserMultiSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_users: Optional[List[str]] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_users: Optional[List[str]] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of Slack users visible to
@@ -578,19 +578,19 @@ class UserMultiSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="multi_users_select",
-            initial_users=initial_users,
             confirm=confirm,
         )
+        self.initial_users = initial_users
 
 
 class ConversationSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_conversation: Optional[str] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_conversation: Optional[str] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of public and private
@@ -611,19 +611,19 @@ class ConversationSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="conversations_select",
-            initial_conversation=initial_conversation,
             confirm=confirm,
         )
+        self.initial_conversation = initial_conversation,
 
 
 class ConversationMultiSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_conversations: Optional[List[str]] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_conversations: Optional[List[str]] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of public and private
@@ -645,19 +645,19 @@ class ConversationMultiSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="multi_conversations_select",
-            initial_conversations=initial_conversations,
             confirm=confirm,
         )
+        self.initial_conversations = initial_conversations
 
 
 class ChannelSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_channel: Optional[str] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_channel: Optional[str] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of public channels
@@ -678,19 +678,19 @@ class ChannelSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="channels_select",
-            initial_channel=initial_channel,
             confirm=confirm,
         )
+        self.initial_channel = initial_channel
 
 
 class ChannelMultiSelectElement(AbstractSelector):
     def __init__(
-        self,
-        *,
-        placeholder: str,
-        action_id: str,
-        initial_channels: Optional[List[str]] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            placeholder: str,
+            action_id: str,
+            initial_channels: Optional[List[str]] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This select menu will populate its options with a list of public channels
@@ -712,9 +712,9 @@ class ChannelMultiSelectElement(AbstractSelector):
             placeholder=placeholder,
             action_id=action_id,
             subtype="multi_channels_select",
-            initial_channels=initial_channels,
-            confirm=confirm,
+            confirm=confirm
         )
+        self.initial_channels = initial_channels
 
 
 class OverflowMenuOption(Option):
@@ -752,11 +752,11 @@ class OverflowMenuElement(InteractiveElement):
     options_max_length = 5
 
     def __init__(
-        self,
-        *,
-        options: List[Union[Option, OverflowMenuOption]],
-        action_id: str,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            options: List[Union[Option, OverflowMenuOption]],
+            action_id: str,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         This is like a cross between a button and a select menu - when a user clicks
@@ -804,12 +804,12 @@ class DatePickerElement(AbstractSelector):
         return super().attributes.union({"initial_date"})
 
     def __init__(
-        self,
-        *,
-        action_id: str,
-        placeholder: Optional[str] = None,
-        initial_date: Optional[str] = None,
-        confirm: Optional[ConfirmObject] = None,
+            self,
+            *,
+            action_id: str,
+            placeholder: Optional[str] = None,
+            initial_date: Optional[str] = None,
+            confirm: Optional[ConfirmObject] = None,
     ):
         """
         An element which lets users easily select a date from a calendar style UI.
