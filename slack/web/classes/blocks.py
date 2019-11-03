@@ -1,6 +1,6 @@
 from typing import List, Optional, Set, Union
 
-from . import JsonObject, JsonValidator, extract_json
+from . import JsonObject, JsonValidator
 from .elements import BlockElement, InteractiveElement, AbstractSelector
 from .objects import MarkdownTextObject, PlainTextObject, TextObject
 
@@ -78,7 +78,7 @@ class SectionBlock(Block):
         """
         super().__init__(_type="section", block_id=block_id)
         self.text = text
-        self.fields = fields or []
+        self.fields = fields
         self.accessory = accessory
 
     @JsonValidator("text or fields attribute must be specified")

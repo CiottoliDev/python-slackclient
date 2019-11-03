@@ -1,7 +1,7 @@
 from json import dumps
 from typing import List, Optional, Union
 
-from . import JsonObject, JsonValidator, extract_json
+from . import JsonObject, JsonValidator
 from .dialog_elements import (
     AbstractDialogSelector,
     DialogChannelSelector,

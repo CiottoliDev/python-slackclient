@@ -3,7 +3,7 @@ import re
 import string
 import warnings
 from abc import ABCMeta
-from typing import List, Optional, Set, Union
+from typing import List, Optional, Union
 
 from . import EnumValidator, JsonObject, JsonValidator
 from .objects import ButtonStyles, ConfirmObject, Option, OptionGroup, PlainTextObject
@@ -36,9 +36,6 @@ class BlockElement(JsonObject, metaclass=ABCMeta):
 
 
 class InteractiveElement(BlockElement):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"action_id"})
 
     action_id_max_length = 255
 
@@ -54,9 +51,6 @@ class InteractiveElement(BlockElement):
 
 
 class ImageElement(BlockElement):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"alt_text", "image_url"})
 
     image_url_max_length = 3000
     alt_text_max_length = 2000
@@ -90,10 +84,6 @@ class ImageElement(BlockElement):
 
 
 class ButtonElement(InteractiveElement):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"style", "value"})
-
     text_max_length = 75
     url_max_length = 3000
     value_max_length = 2000
@@ -415,9 +405,6 @@ class SelectElement(AbstractSelector):
 
 
 class ExternalDataSelectElement(AbstractSelector):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"min_query_length"})
 
     def __init__(
             self,
@@ -466,10 +453,6 @@ class ExternalDataSelectElement(AbstractSelector):
 
 
 class ExternalDataMultiSelectElement(AbstractSelector):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"min_query_length"})
-
     def __init__(
             self,
             *,
@@ -799,10 +782,6 @@ class OverflowMenuElement(InteractiveElement):
 
 
 class DatePickerElement(AbstractSelector):
-    @property
-    def attributes(self) -> Set[str]:
-        return super().attributes.union({"initial_date"})
-
     def __init__(
             self,
             *,

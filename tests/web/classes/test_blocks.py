@@ -26,7 +26,6 @@ class SectionBlockTests(unittest.TestCase):
             "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
             "block_id": "a_block",
             "type": "section",
-            "fields": []
         }
         self.assertDictEqual(section, json)
 
@@ -56,7 +55,6 @@ class SectionBlockTests(unittest.TestCase):
             "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
             "accessory": button.to_dict(),
             "type": "section",
-            "fields": []
         }
         self.assertDictEqual(section, coded)
 
@@ -66,7 +64,7 @@ class SectionBlockTests(unittest.TestCase):
 
     def test_fields_length(self):
         with self.assertRaises(SlackObjectFormationError):
-            SectionBlock(fields=[f"field{i}" for i in range(11)]).to_dict()
+            SectionBlock(fields=[MarkdownTextObject(text=f"field{i}") for i in range(11)]).to_dict()
 
 
 class ImageBlockTests(unittest.TestCase):

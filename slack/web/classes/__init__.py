@@ -1,7 +1,7 @@
 import json
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from functools import wraps
-from typing import Callable, Iterable, List, Set, Union
+from typing import Callable, Iterable
 
 from ...errors import SlackObjectFormationError
 
@@ -12,13 +12,6 @@ class BaseObject:
 
 
 class JsonObject(BaseObject, metaclass=ABCMeta):
-    @property
-    @abstractmethod
-    def attributes(self) -> Set[str]:
-        """
-        Provide a set of attributes of this object that will make up its JSON structure
-        """
-        return set()
 
     def validate_json(self) -> None:
         """
@@ -30,7 +23,8 @@ class JsonObject(BaseObject, metaclass=ABCMeta):
             if callable(method) and hasattr(method, "validator"):
                 method()
 
-    def get_non_null_attributes(self, dict_: dict = attributes) -> dict:
+    @staticmethod
+    def __get_non_null_attributes(dict_: dict) -> dict:
         """
         Construct a dictionary out of non-null keys (from attributes property)
         present on this object
@@ -40,13 +34,12 @@ class JsonObject(BaseObject, metaclass=ABCMeta):
     def to_dict(self, *args) -> dict:
         self.validate_json()
         _json = json.dumps(self, default=lambda o: o.__dict__)
-        _dict = json.loads(_json, object_hook=self.get_non_null_attributes)
-       # _dict_not_null = self.get_non_null_attributes(_dict)
+        _dict = json.loads(_json, object_hook=self.__get_non_null_attributes)
 
         return _dict
 
     def __repr__(self):
-        _json = self.get_non_null_attributes()
+        _json = self.to_dict()
         if _json:
             return f"<slack.{self.__class__.__name__}: {_json}>"
         else:
@@ -81,26 +74,26 @@ class EnumValidator(JsonValidator):
             f"{', '.join(enum)}"
         )
 
-
-def extract_json(item_or_items: Union[JsonObject, List[JsonObject], str], *format_args) -> Union[dict, List[dict], str]:
-    """
-    Given a sequence (or single item), attempt to call the to_dict() method on each
-    item and return a plain list. If item is not the expected type, return it
-    unmodified, in case it's already a plain dict or some other user created class.
-
-    Args:
-      item_or_items: item(s) to go through
-      format_args: Any formatting specifiers to pass into the object's to_dict
-            method
-    """
-    try:
-        return [
-            elem.to_dict(*format_args) if isinstance(elem, JsonObject) else elem
-            for elem in item_or_items
-        ]
-    except TypeError:  # not iterable, so try returning it as a single item
-        return (
-            item_or_items.to_dict(*format_args)
-            if isinstance(item_or_items, JsonObject)
-            else item_or_items
-        )
+# def extract_json(item_or_items: Union[JsonObject, List[JsonObject], str], *format_args
+# ) -> Union[dict, List[dict], str]:
+#     """
+#     Given a sequence (or single item), attempt to call the to_dict() method on each
+#     item and return a plain list. If item is not the expected type, return it
+#     unmodified, in case it's already a plain dict or some other user created class.
+#
+#     Args:
+#       item_or_items: item(s) to go through
+#       format_args: Any formatting specifiers to pass into the object's to_dict
+#             method
+#     """
+#     try:
+#         return [
+#             elem.to_dict(*format_args) if isinstance(elem, JsonObject) else elem
+#             for elem in item_or_items
+#         ]
+#     except TypeError:  # not iterable, so try returning it as a single item
+#         return (
+#             item_or_items.to_dict(*format_args)
+#             if isinstance(item_or_items, JsonObject)
+#             else item_or_items
+#         )
