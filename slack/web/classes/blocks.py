@@ -1,7 +1,7 @@
 from typing import List, Optional, Set, Union
 
 from . import JsonObject, JsonValidator
-from .elements import BlockElement, InteractiveElement, AbstractSelector
+from .elements import BlockElement, InteractiveElement, PlainTextElement
 from .objects import MarkdownTextObject, PlainTextObject, TextObject
 
 
@@ -44,12 +44,12 @@ class SectionBlock(Block):
     fields_max_length = 10
 
     def __init__(
-        self,
-        *,
-        text: TextObject = None,
-        block_id: Optional[str] = None,
-        fields: List[MarkdownTextObject] = None,
-        accessory: Optional[BlockElement] = None,
+            self,
+            *,
+            text: TextObject = None,
+            block_id: Optional[str] = None,
+            fields: List[MarkdownTextObject] = None,
+            accessory: Optional[BlockElement] = None,
     ):
         """
         A section is one of the most flexible blocks available.
@@ -133,12 +133,12 @@ class ImageBlock(Block):
     title_max_length = 2000
 
     def __init__(
-        self,
-        *,
-        image_url: str,
-        alt_text: str,
-        title: Optional[str] = None,
-        block_id: Optional[str] = None,
+            self,
+            *,
+            image_url: str,
+            alt_text: str,
+            title: Optional[str] = None,
+            block_id: Optional[str] = None,
     ):
         """
         A simple image block, designed to make those cat photos really pop.
@@ -184,7 +184,7 @@ class ActionsBlock(Block):
     elements_max_length = 5
 
     def __init__(
-        self, *, elements: List[InteractiveElement], block_id: Optional[str] = None
+            self, *, elements: List[InteractiveElement], block_id: Optional[str] = None
     ):
         """
         A block that is used to hold interactive elements.
@@ -213,10 +213,10 @@ class ContextBlock(Block):
     elements_max_length = 10
 
     def __init__(
-        self,
-        *,
-        elements: List[Union[ImageBlock, TextObject]],
-        block_id: Optional[str] = None,
+            self,
+            *,
+            elements: List[Union[ImageBlock, TextObject]],
+            block_id: Optional[str] = None,
     ):
         """
         Displays message context, which can include both images and text.
@@ -247,12 +247,12 @@ class InputBlock(Block):
     hint_max_length = 2000
 
     def __init__(
-        self,
-        *,
-        label: PlainTextObject,
-        element: Union[str, AbstractSelector],
-        hint: Optional[str] = None,
-        optional: Optional[bool] = False,
+            self,
+            *,
+            label: PlainTextObject,
+            element: Union[InteractiveElement, PlainTextElement],
+            hint: Optional[str] = None,
+            optional: Optional[bool] = False,
     ):
         """
         A block that collects information from users - it can hold a plain-text input element,
@@ -287,15 +287,6 @@ class InputBlock(Block):
     def hint_length(self):
         return self.hint is None or len(self.hint) <= self.hint_max_length
 
-    @JsonValidator(
-        (
-            "element attribute must be a string, select element, multi-select element, "
-            "or a datepicker. (Subclasses of AbstractSelector)"
-        )
-    )
-    def element_type(self):
-        return isinstance(self.element, (str, AbstractSelector))
-
     # def to_dict(self) -> dict:
     #     json = super().to_dict()
     #     if isinstance(self.element, str):
@@ -311,11 +302,11 @@ class FileBlock(Block):
         return super().attributes.union({"external_id", "source"})
 
     def __init__(
-        self,
-        *,
-        external_id: str,
-        source: str = "remote",
-        block_id: Optional[str] = None,
+            self,
+            *,
+            external_id: str,
+            source: str = "remote",
+            block_id: Optional[str] = None,
     ):
         """Displays a remote file.
 

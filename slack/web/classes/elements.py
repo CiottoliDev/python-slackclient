@@ -36,10 +36,11 @@ class BlockElement(JsonObject, metaclass=ABCMeta):
 
 
 class InteractiveElement(BlockElement):
-
     action_id_max_length = 255
 
-    def __init__(self, *, action_id: str, type: str):
+    def __init__(self, *,
+                 action_id: str,
+                 type: str):
         super().__init__(type=type)
         self.action_id = action_id
 
@@ -51,11 +52,12 @@ class InteractiveElement(BlockElement):
 
 
 class ImageElement(BlockElement):
-
     image_url_max_length = 3000
     alt_text_max_length = 2000
 
-    def __init__(self, *, image_url: str, alt_text: str):
+    def __init__(self, *,
+                 image_url: str,
+                 alt_text: str):
         """
         An element to insert an image - this element can be used in section and
         context blocks only. If you want a block with only an image in it,
@@ -819,3 +821,46 @@ class DatePickerElement(AbstractSelector):
         return self.initial_date is None or re.match(
             r"\d{4}-[01][12]-[0123]\d", self.initial_date
         )
+
+
+class PlainTextElement(BlockElement):
+    min_length_max_value = 3000
+
+    def __init__(self, *,
+                 action_id: str,
+                 placeholder: PlainTextObject = None,
+                 initial_value: str = None,
+                 multiline: bool = None,
+                 min_length: int = None,
+                 max_length: int = None):
+        """
+       A plain-text input, similar to the HTML <input> tag, creates a field where a user can enter freeform data.
+        It can appear as a single-line field or a larger textarea using the multiline flag..
+
+        https://api.slack.com/reference/block-kit/block-elements#input
+
+        Args:
+            placeholder:placeholder text shown on this element. Cannot exceed 150
+                characters.
+            action_id: ID to be used for this action - should be unique. Cannot
+                exceed 255 characters.
+            initial_value: The initial value in the plain-text input when it is loaded
+            multiline: Indicates whether the input will be a single line
+            min_length: The minimum length of input that the user must provide.
+                If the user provides less, they will receive an error.
+            max_length: The maximum length of input that the user can provide.
+                If the user provides more, they will receive an error.
+        """
+        super().__init__(type="plain_text_input")
+        self.placeholder = placeholder
+        self.action_id = action_id
+        self.initial_value = initial_value
+        self.multiline = multiline
+        self.min_length = min_length
+        self.max_length = max_length
+
+    @JsonValidator(
+        f"max value for min length is {min_length_max_value}"
+    )
+    def max_value_length(self):
+        return self.min_length is None or self.min_length <= self.min_length_max_value

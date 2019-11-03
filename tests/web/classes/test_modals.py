@@ -1,6 +1,7 @@
+import json
 import unittest
 
-from slack.web.classes.elements import UserMultiSelectElement
+from slack.web.classes.elements import UserMultiSelectElement, PlainTextElement
 from slack.web.classes.modals import ModalBuilder
 from slack.web.classes.objects import PlainTextObject
 
@@ -12,10 +13,14 @@ class TestModals(unittest.TestCase):
             .submit("Go") \
             .section(text=PlainTextObject(text="Hi, is a test text block in a section")) \
             .divider() \
+            .input(label=PlainTextObject(text="single input"),
+                   element=PlainTextElement(placeholder=PlainTextObject(text="Hello, Slack"),
+                                            action_id="plain_text")) \
             .input(label=PlainTextObject(text="Label"),
                    element=UserMultiSelectElement(placeholder=PlainTextObject(text="Select users"),
                                                   action_id="users")) \
             .to_dict()
+        x = json.dumps(modal)
         coded = {
             "type": "modal",
             "clear_on_close": False,
@@ -41,6 +46,24 @@ class TestModals(unittest.TestCase):
                 },
                 {
                     "type": "divider"
+                },
+                {
+                    "type": "input",
+                    "label": {
+                        "text": "single input",
+                        "type": "plain_text",
+                        "emoji": True
+                    },
+                    "element": {
+                        "type": "plain_text_input",
+                        "placeholder": {
+                            "text": "Hello, Slack",
+                            "type": "plain_text",
+                            "emoji": True
+                        },
+                        "action_id": "plain_text"
+                    },
+                    "optional": False
                 },
                 {
                     "type": "input",
