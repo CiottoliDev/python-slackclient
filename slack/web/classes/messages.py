@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from . import JsonObject, JsonValidator, extract_json
+from . import JsonObject, JsonValidator
 from .attachments import Attachment
 from .blocks import Block
 
@@ -9,8 +9,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Message(JsonObject):
-    attributes = {"text"}
-
     attachments_max_length = 100
 
     def __init__(
@@ -38,8 +36,8 @@ class Message(JsonObject):
                 bold/italics, or leave text completely unmodified.
         """
         self.text = text
-        self.attachments = attachments or []
-        self.blocks = blocks or []
+        self.attachments = attachments
+        self.blocks = blocks
         self.mrkdwn = markdown
 
     @JsonValidator(

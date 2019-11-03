@@ -20,7 +20,6 @@ class TestModals(unittest.TestCase):
                    element=UserMultiSelectElement(placeholder=PlainTextObject(text="Select users"),
                                                   action_id="users")) \
             .to_dict()
-        x = json.dumps(modal)
         coded = {
             "type": "modal",
             "clear_on_close": False,

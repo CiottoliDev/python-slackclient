@@ -11,10 +11,9 @@ from .blocks import (
     InteractiveElement,
     ContextBlock,
     InputBlock,
-    AbstractSelector,
     FileBlock,
 )
-from .elements import PlainTextObject
+from .elements import PlainTextObject, PlainTextElement
 from .objects import TextObject
 
 
@@ -290,7 +289,7 @@ class ModalBuilder(JsonObject):
             self,
             *,
             label: PlainTextObject,
-            element: AbstractSelector,
+            element: Union[InteractiveElement, PlainTextElement],
             hint: Optional[str] = None,
             optional: Optional[bool] = False,
     ):

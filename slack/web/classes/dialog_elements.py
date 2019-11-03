@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Set, Union
 
-from . import EnumValidator, JsonObject, JsonValidator, extract_json
+from . import EnumValidator, JsonObject, JsonValidator
 from .objects import DynamicSelectElementTypes, Option, OptionGroup
 
 TextElementSubtypes = {"email", "number", "tel", "url"}

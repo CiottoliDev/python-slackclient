@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional, Set
 
-from . import EnumValidator, JsonObject, JsonValidator, extract_json
+from . import EnumValidator, JsonObject, JsonValidator
 from .actions import Action
 from .blocks import Block
 
