@@ -253,6 +253,7 @@ class InputBlock(Block):
             element: Union[InteractiveElement, PlainTextElement],
             hint: Optional[str] = None,
             optional: Optional[bool] = False,
+            block_id: Optional[str] = None
     ):
         """
         A block that collects information from users - it can hold a plain-text input element,
@@ -273,7 +274,7 @@ class InputBlock(Block):
             optional: A boolean that indicates whether the input element
                 may be empty when a user submits the modal. Defaults to false.
         """
-        super().__init__(_type="input")
+        super().__init__(_type="input", block_id=block_id)
         self.label = label
         self.element = element
         self.hint = hint
