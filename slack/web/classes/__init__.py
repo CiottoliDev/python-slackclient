@@ -1,5 +1,4 @@
 import json
-import sys
 from abc import ABCMeta, abstractmethod
 from functools import wraps
 from typing import Callable, Iterable, List, Set, Union
@@ -40,26 +39,11 @@ class JsonObject(BaseObject, metaclass=ABCMeta):
 
     def to_dict(self, *args) -> dict:
         self.validate_json()
-        if sys.version_info < (3, 7):
-            return self.to_dict_old(*args)
         _json = json.dumps(self, default=lambda o: o.__dict__)
         _dict = json.loads(_json, object_hook=self.get_non_null_attributes)
        # _dict_not_null = self.get_non_null_attributes(_dict)
 
         return _dict
-
-    def to_dict_old(self, *args) -> dict:
-        """
-        Extract this object as a JSON-compatible, Slack-API-valid dictionary
-
-        Args:
-          *args: Any specific formatting args (rare; generally not required)
-
-        Raises:
-          SlackObjectFormationError if the object was not valid
-        """
-        # return self.get_non_null_attributes()
-        raise NotImplementedError()
 
     def __repr__(self):
         _json = self.get_non_null_attributes()
