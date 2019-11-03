@@ -185,19 +185,19 @@ class AbstractDialogSelector(JsonObject, metaclass=ABCMeta):
     def data_source_valid(self):
         return self.data_source in self.DataSourceTypes
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.data_source == "external":
-            if isinstance(self.value, Option):
-                json["selected_options"] = extract_json([self.value], "dialog")
-            elif self.value is not None:
-                json["selected_options"] = Option.from_single_value(self.value)
-        else:
-            if isinstance(self.value, Option):
-                json["value"] = self.value.value
-            elif self.value is not None:
-                json["value"] = self.value
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.data_source == "external":
+    #         if isinstance(self.value, Option):
+    #             json["selected_options"] = extract_json([self.value], "dialog")
+    #         elif self.value is not None:
+    #             json["selected_options"] = Option.from_single_value(self.value)
+    #     else:
+    #         if isinstance(self.value, Option):
+    #             json["value"] = self.value.value
+    #         elif self.value is not None:
+    #             json["value"] = self.value
+    #     return json
 
 
 class DialogStaticSelector(AbstractDialogSelector):
@@ -257,13 +257,13 @@ class DialogStaticSelector(AbstractDialogSelector):
     def options_length(self):
         return len(self.options) < self.options_max_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if isinstance(self.options[0], OptionGroup):
-            json["option_groups"] = extract_json(self.options, "dialog")
-        else:
-            json["options"] = extract_json(self.options, "dialog")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if isinstance(self.options[0], OptionGroup):
+    #         json["option_groups"] = extract_json(self.options, "dialog")
+    #     else:
+    #         json["options"] = extract_json(self.options, "dialog")
+    #     return json
 
 
 class DialogUserSelector(AbstractDialogSelector):

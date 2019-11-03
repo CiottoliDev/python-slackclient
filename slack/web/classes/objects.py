@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Set, Union
 
-from . import BaseObject, JsonObject, JsonValidator, extract_json
+from . import BaseObject, JsonObject, JsonValidator
 
 ButtonStyles = {"danger", "primary"}
 DynamicSelectElementTypes = {"channels", "conversations", "users"}
@@ -32,12 +32,12 @@ class Link(BaseObject):
 
 class DateLink(Link):
     def __init__(
-        self,
-        *,
-        date: Union[datetime, int],
-        date_format: str,
-        fallback: str,
-        link: Optional[str] = None,
+            self,
+            *,
+            date: Union[datetime, int],
+            date_format: str,
+            fallback: str,
+            link: Optional[str] = None,
     ):
         """
         Messages containing a date or time should be displayed in the local timezone
@@ -127,17 +127,17 @@ class EveryoneLink(Link):
 class TextObject(JsonObject):
     attributes = {"text", "type"}
 
-    def __init__(self, *, text: str, subtype: str):
+    def __init__(self, *, text: str, type: str):
         """
         Super class for new text "objects" used in Block kit
         """
         self.text = text
-        self.subtype = subtype
+        self.type = type
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["type"] = self.subtype
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["type"] = self.type
+    #     return json
 
 
 class PlainTextObject(TextObject):
@@ -155,7 +155,7 @@ class PlainTextObject(TextObject):
         Args:
             emoji: Whether to escape emoji in text into Slack's :emoji: format
         """
-        super().__init__(text=text, subtype="plain_text")
+        super().__init__(text=text, type="plain_text")
         self.emoji = emoji
 
     @staticmethod
@@ -183,7 +183,7 @@ class MarkdownTextObject(TextObject):
                 auto-converted into links, conversation names will be link-ified, and
                 certain mentions will be automatically parsed.
         """
-        super().__init__(text=text, subtype="mrkdwn")
+        super().__init__(text=text, type="mrkdwn")
         self.verbatim = verbatim
 
     @staticmethod
@@ -214,12 +214,12 @@ class ConfirmObject(JsonObject):
     deny_max_length = 30
 
     def __init__(
-        self,
-        *,
-        title: str,
-        text: Union[TextObject, str],
-        confirm: str = "Yes",
-        deny: str = "No",
+            self,
+            *,
+            title: PlainTextObject,
+            text: TextObject,
+            confirm: PlainTextObject = PlainTextObject(text="Yes"),
+            deny: PlainTextObject = PlainTextObject(text="No"),
     ):
         """
         An object that defines a dialog that provides a confirmation step to any
@@ -245,45 +245,45 @@ class ConfirmObject(JsonObject):
 
     @JsonValidator(f"title attribute cannot exceed {title_max_length} characters")
     def title_length(self):
-        return len(self.title) <= self.title_max_length
+        return len(self.title.text) <= self.title_max_length
 
     @JsonValidator(f"text attribute cannot exceed {text_max_length} characters")
     def text_length(self):
         if isinstance(self.text, TextObject):
             return len(self.text.text) <= self.text_max_length
         else:
-            return len(self.text) <= self.text_max_length
+            return len(self.text.text) <= self.text_max_length
 
     @JsonValidator(f"confirm attribute cannot exceed {confirm_max_length} characters")
     def confirm_length(self):
-        return len(self.confirm) <= self.confirm_max_length
+        return len(self.confirm.text) <= self.confirm_max_length
 
     @JsonValidator(f"deny attribute cannot exceed {deny_max_length} characters")
     def deny_length(self):
-        return len(self.deny) <= self.deny_max_length
+        return len(self.deny.text) <= self.deny_max_length
 
-    def to_dict(self, option_type: str = "block") -> dict:
-        if option_type == "action":
-            # deliberately skipping JSON validators here - can't find documentation
-            # on actual limits here
-            return {
-                "text": self.text,
-                "title": self.title,
-                "ok_text": self.confirm if self.confirm != "Yes" else "Okay",
-                "dismiss_text": self.deny if self.deny != "No" else "Cancel",
-            }
-        else:
-            self.validate_json()
-            json = {
-                "title": PlainTextObject.direct_from_string(self.title),
-                "confirm": PlainTextObject.direct_from_string(self.confirm),
-                "deny": PlainTextObject.direct_from_string(self.deny),
-            }
-            if isinstance(self.text, TextObject):
-                json["text"] = self.text.to_dict()
-            else:
-                json["text"] = MarkdownTextObject.direct_from_string(self.text)
-            return json
+    # def to_dict(self, option_type: str = "block") -> dict:
+    #     if option_type == "action":
+    #         # deliberately skipping JSON validators here - can't find documentation
+    #         # on actual limits here
+    #         return {
+    #             "text": self.text,
+    #             "title": self.title,
+    #             "ok_text": self.confirm if self.confirm != "Yes" else "Okay",
+    #             "dismiss_text": self.deny if self.deny != "No" else "Cancel",
+    #         }
+    #     else:
+    #         self.validate_json()
+    #         json = {
+    #             "title": PlainTextObject.direct_from_string(self.title),
+    #             "confirm": PlainTextObject.direct_from_string(self.confirm.text),
+    #             "deny": PlainTextObject.direct_from_string(self.deny.text),
+    #         }
+    #         if isinstance(self.text, TextObject):
+    #             json["text"] = self.text.to_dict()
+    #         else:
+    #             json["text"] = MarkdownTextObject.direct_from_string(self.text.text)
+    #         return json
 
 
 class Option(JsonObject):
@@ -299,7 +299,7 @@ class Option(JsonObject):
     label_max_length = 75
     value_max_length = 75
 
-    def __init__(self, *, label: str, value: str, description: Optional[str] = None):
+    def __init__(self, *, text: PlainTextObject, value: str, description: Optional[str] = None):
         """
         An object that represents a single selectable item in a block element (
         SelectElement, OverflowMenuElement) or dialog element
@@ -315,7 +315,7 @@ class Option(JsonObject):
         https://api.slack.com/docs/interactive-message-field-guide#option_fields
 
         Args:
-            label: A short, user-facing string to label this option to users.
+            text: A short, user-facing string to label this option to users.
                 Cannot exceed 75 characters.
             value: A short string that identifies this particular option to your
                 application. It will be part of the payload when this option is selected
@@ -324,13 +324,13 @@ class Option(JsonObject):
                 this option. Only supported in legacy message actions, not in blocks or
                 dialogs.
         """
-        self.label = label
+        self.text = text
         self.value = value
         self.description = description
 
     @JsonValidator(f"label attribute cannot exceed {label_max_length} characters")
     def label_length(self):
-        return len(self.label) <= self.label_max_length
+        return len(self.text.text) <= self.label_max_length
 
     @JsonValidator(f"value attribute cannot exceed {value_max_length} characters")
     def value_length(self):
@@ -344,15 +344,15 @@ class Option(JsonObject):
         """
         self.validate_json()
         if option_type == "dialog":
-            return {"label": self.label, "value": self.value}
+            return {"label": self.text, "value": self.value}
         elif option_type == "action":
-            json = {"text": self.label, "value": self.value}
+            json = {"text": self.text, "value": self.value}
             if self.description is not None:
                 json["description"] = self.description
             return json
         else:  # if option_type == "block"; this should be the most common case
             return {
-                "text": PlainTextObject.direct_from_string(self.label),
+                "text": PlainTextObject.direct_from_string(self.text.text),
                 "value": self.value,
             }
 
@@ -361,7 +361,7 @@ class Option(JsonObject):
         """
         Creates a simple Option instance with the same value and label
         """
-        return Option(value=value_and_label, label=value_and_label)
+        return Option(value=value_and_label, text=PlainTextObject(text=value_and_label))
 
 
 class OptionGroup(JsonObject):
@@ -409,15 +409,15 @@ class OptionGroup(JsonObject):
         if option_type == "dialog":
             return {
                 "label": self.label,
-                "options": extract_json(self.options, option_type),
+                "options": [option.to_dict() for option in self.options]
             }
         elif option_type == "action":
             return {
                 "text": self.label,
-                "options": extract_json(self.options, option_type),
+                "options": [option.to_dict() for option in self.options]
             }
         else:  # if option_type == "block"; this should be the most common case
             return {
                 "label": PlainTextObject.direct_from_string(self.label),
-                "options": extract_json(self.options, option_type),
+                "options": [option.to_dict() for option in self.options]
             }

@@ -9,7 +9,7 @@ from slack.web.classes.blocks import (
     SectionBlock,
 )
 from slack.web.classes.elements import ButtonElement, ImageElement, LinkButtonElement
-from slack.web.classes.objects import PlainTextObject
+from slack.web.classes.objects import PlainTextObject, MarkdownTextObject
 from . import STRING_3001_CHARS
 
 
@@ -19,19 +19,22 @@ class DividerBlockTests(unittest.TestCase):
 
 
 class SectionBlockTests(unittest.TestCase):
-    def test_json(self):
-        self.assertDictEqual(
-            SectionBlock(text="some text", block_id="a_block").to_dict(),
-            {
-                "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
-                "block_id": "a_block",
-                "type": "section",
-            },
-        )
 
+    def test_json_simple(self):
+        section = SectionBlock(text=MarkdownTextObject(text="some text"), block_id="a_block").to_dict()
+        json = {
+            "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
+            "block_id": "a_block",
+            "type": "section",
+            "fields": []
+        }
+        self.assertDictEqual(section, json)
+
+    def test_json_with_fields(self):
         self.assertDictEqual(
             SectionBlock(
-                text="some text", fields=[f"field{i}" for i in range(5)]
+                text=MarkdownTextObject(text="some text"),
+                fields=[MarkdownTextObject(text=f"field{i}") for i in range(5)]
             ).to_dict(),
             {
                 "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
@@ -46,15 +49,16 @@ class SectionBlockTests(unittest.TestCase):
             },
         )
 
-        button = LinkButtonElement(text="Click me!", url="http://google.com")
-        self.assertDictEqual(
-            SectionBlock(text="some text", accessory=button).to_dict(),
-            {
-                "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
-                "accessory": button.to_dict(),
-                "type": "section",
-            },
-        )
+    def test_json_with_accessory(self):
+        button = LinkButtonElement(text=PlainTextObject(text="Click me!"), url="http://google.com")
+        section = SectionBlock(text=MarkdownTextObject(text="some text"), accessory=button).to_dict()
+        coded = {
+            "text": {"text": "some text", "type": "mrkdwn", "verbatim": False},
+            "accessory": button.to_dict(),
+            "type": "section",
+            "fields": []
+        }
+        self.assertDictEqual(section, coded)
 
     def test_text_or_fields_populated(self):
         with self.assertRaises(SlackObjectFormationError):
@@ -98,15 +102,14 @@ class ImageBlockTests(unittest.TestCase):
 class ActionsBlockTests(unittest.TestCase):
     def setUp(self) -> None:
         self.elements = [
-            ButtonElement(text="Click me", action_id="reg_button", value="1"),
-            LinkButtonElement(text="URL Button", url="http://google.com"),
+            ButtonElement(text=PlainTextObject(text="Click me"), action_id="reg_button", value="1"),
+            LinkButtonElement(text=PlainTextObject(text="URL Button"), url="http://google.com"),
         ]
 
     def test_json(self):
-        self.assertDictEqual(
-            ActionsBlock(elements=self.elements).to_dict(),
-            {"elements": [e.to_dict() for e in self.elements], "type": "actions"},
-        )
+        block = ActionsBlock(elements=self.elements).to_dict()
+        hard = {"type": "actions", "elements": [e.to_dict() for e in self.elements]}
+        self.assertDictEqual(block, hard)
 
     def test_elements_length(self):
         with self.assertRaises(SlackObjectFormationError):

@@ -194,25 +194,16 @@ class ConfirmObjectTests(unittest.TestCase):
             "text": {"text": "are you sure?", "type": "mrkdwn", "verbatim": False},
             "title": {"emoji": True, "text": "some title", "type": "plain_text"},
         }
-        simple_object = ConfirmObject(title="some title", text="are you sure?")
-        self.assertDictEqual(simple_object.to_dict(), expected)
-        self.assertDictEqual(simple_object.to_dict("block"), expected)
-        self.assertDictEqual(
-            simple_object.to_dict("action"),
-            {
-                "text": "are you sure?",
-                "title": "some title",
-                "ok_text": "Okay",
-                "dismiss_text": "Cancel",
-            },
-        )
+        simple_object = ConfirmObject(title=PlainTextObject(text="some title"),
+                                      text=MarkdownTextObject(text="are you sure?")).to_dict()
+        self.assertDictEqual(simple_object, expected)
 
     def test_confirm_overrides(self):
         confirm = ConfirmObject(
-            title="some title",
-            text="are you sure?",
-            confirm="I'm really sure",
-            deny="Nevermind",
+            title=PlainTextObject(text="some title"),
+            text=MarkdownTextObject(text="are you sure?"),
+            confirm=PlainTextObject(text="I'm really sure"),
+            deny=PlainTextObject(text="Nevermind"),
         )
         expected = {
             "confirm": {"emoji": True, "text": "I'm really sure", "type": "plain_text"},
@@ -221,29 +212,20 @@ class ConfirmObjectTests(unittest.TestCase):
             "title": {"emoji": True, "text": "some title", "type": "plain_text"},
         }
         self.assertDictEqual(confirm.to_dict(), expected)
-        self.assertDictEqual(confirm.to_dict("block"), expected)
-        self.assertDictEqual(
-            confirm.to_dict("action"),
-            {
-                "text": "are you sure?",
-                "title": "some title",
-                "ok_text": "I'm really sure",
-                "dismiss_text": "Nevermind",
-            },
-        )
 
     def test_passing_text_objects(self):
-        direct_construction = ConfirmObject(title="title", text="Are you sure?")
+        direct_construction = ConfirmObject(title=PlainTextObject(text="title"),
+                                            text=MarkdownTextObject(text="Are you sure?"))
 
         mrkdwn = MarkdownTextObject(text="Are you sure?")
 
-        preconstructed = ConfirmObject(title="title", text=mrkdwn)
+        preconstructed = ConfirmObject(title=PlainTextObject(text="title"), text=mrkdwn)
 
         self.assertDictEqual(direct_construction.to_dict(), preconstructed.to_dict())
 
         plaintext = PlainTextObject(text="Are you sure?", emoji=False)
 
-        passed_plaintext = ConfirmObject(title="title", text=plaintext)
+        passed_plaintext = ConfirmObject(title=PlainTextObject(text="title"), text=plaintext)
 
         self.assertDictEqual(
             passed_plaintext.to_dict(),
@@ -257,56 +239,51 @@ class ConfirmObjectTests(unittest.TestCase):
 
     def test_title_length(self):
         with self.assertRaises(SlackObjectFormationError):
-            ConfirmObject(title=STRING_301_CHARS, text="Are you sure?").to_dict()
+            ConfirmObject(title=PlainTextObject(text=STRING_301_CHARS),
+                          text=MarkdownTextObject(text="Are you sure?")).to_dict()
 
     def test_text_length(self):
         with self.assertRaises(SlackObjectFormationError):
-            ConfirmObject(title="title", text=STRING_301_CHARS).to_dict()
+            ConfirmObject(title=PlainTextObject(text="title"), text=PlainTextObject(text=STRING_301_CHARS)).to_dict()
 
     def test_text_length_with_object(self):
         with self.assertRaises(SlackObjectFormationError):
             plaintext = PlainTextObject(text=STRING_301_CHARS)
-            ConfirmObject(title="title", text=plaintext).to_dict()
+            ConfirmObject(title=PlainTextObject(text="title"), text=plaintext).to_dict()
 
         with self.assertRaises(SlackObjectFormationError):
             markdown = MarkdownTextObject(text=STRING_301_CHARS)
-            ConfirmObject(title="title", text=markdown).to_dict()
+            ConfirmObject(title=PlainTextObject(text="title"), text=markdown).to_dict()
 
     def test_confirm_length(self):
         with self.assertRaises(SlackObjectFormationError):
             ConfirmObject(
-                title="title", text="Are you sure?", confirm=STRING_51_CHARS
+                title=PlainTextObject(text="title"), text=MarkdownTextObject(text="Are you sure?"),
+                confirm=PlainTextObject(text=STRING_51_CHARS)
             ).to_dict()
 
     def test_deny_length(self):
         with self.assertRaises(SlackObjectFormationError):
             ConfirmObject(
-                title="title", text="Are you sure?", deny=STRING_51_CHARS
+                title=PlainTextObject(text="title"), text=MarkdownTextObject(text="Are you sure?"),
+                deny=PlainTextObject(text=STRING_51_CHARS)
             ).to_dict()
 
 
 class OptionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.common = Option(label="an option", value="option_1")
+        self.common = Option(text=PlainTextObject(text="an option"), value="option_1")
 
     def test_block_style_json(self):
         expected = {
             "text": {"type": "plain_text", "text": "an option", "emoji": True},
             "value": "option_1",
         }
-        self.assertDictEqual(self.common.to_dict("block"), expected)
+        self.assertDictEqual(self.common.to_dict(), expected)
         self.assertDictEqual(self.common.to_dict(), expected)
 
-    def test_dialog_style_json(self):
-        expected = {"label": "an option", "value": "option_1"}
-        self.assertDictEqual(self.common.to_dict("dialog"), expected)
-
-    def test_action_style_json(self):
-        expected = {"text": "an option", "value": "option_1"}
-        self.assertDictEqual(self.common.to_dict("action"), expected)
-
     def test_from_single_value(self):
-        option = Option(label="option_1", value="option_1")
+        option = Option(text=PlainTextObject(text="option_1"), value="option_1")
         self.assertDictEqual(
             option.to_dict("text"),
             option.from_single_value("option_1").to_dict("text"),
@@ -314,11 +291,11 @@ class OptionTests(unittest.TestCase):
 
     def test_label_length(self):
         with self.assertRaises(SlackObjectFormationError):
-            Option(label=STRING_301_CHARS, value="option_1").to_dict("text")
+            Option(text=PlainTextObject(text=STRING_301_CHARS), value="option_1").to_dict("text")
 
     def test_value_length(self):
         with self.assertRaises(SlackObjectFormationError):
-            Option(label="option_1", value=STRING_301_CHARS).to_dict("text")
+            Option(text=PlainTextObject(text="option_1"), value=STRING_301_CHARS).to_dict("text")
 
 
 class OptionGroupTests(unittest.TestCase):
@@ -351,32 +328,6 @@ class OptionGroupTests(unittest.TestCase):
         }
         self.assertDictEqual(self.common.to_dict("block"), expected)
         self.assertDictEqual(self.common.to_dict(), expected)
-
-    def test_dialog_style_json(self):
-        self.assertDictEqual(
-            self.common.to_dict("dialog"),
-            {
-                "label": "an option",
-                "options": [
-                    {"label": "one", "value": "one"},
-                    {"label": "two", "value": "two"},
-                    {"label": "three", "value": "three"},
-                ],
-            },
-        )
-
-    def test_action_style_json(self):
-        self.assertDictEqual(
-            self.common.to_dict("action"),
-            {
-                "text": "an option",
-                "options": [
-                    {"text": "one", "value": "one"},
-                    {"text": "two", "value": "two"},
-                    {"text": "three", "value": "three"},
-                ],
-            },
-        )
 
     def test_label_length(self):
         with self.assertRaises(SlackObjectFormationError):

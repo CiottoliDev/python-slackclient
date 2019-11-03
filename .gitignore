@@ -27,3 +27,7 @@ coverage.xml
 .python-version
 pip
 .mypy_cache/
+
+
+Pipfile.lock
+.idea

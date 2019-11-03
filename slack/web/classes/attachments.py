@@ -143,7 +143,7 @@ class Attachment(JsonObject):
         self.footer_icon = footer_icon
         self.ts = ts
         self.fields = fields or []
-        self.markdown_in = markdown_in or []
+        self.mrkdwn_in = markdown_in or []
 
     @JsonValidator(f"footer attribute cannot exceed {footer_max_length} characters")
     def footer_length(self):
@@ -155,8 +155,8 @@ class Attachment(JsonObject):
 
     @EnumValidator("markdown_in", MarkdownFields)
     def markdown_in_valid(self):
-        return not self.markdown_in or all(
-            e in self.MarkdownFields for e in self.markdown_in
+        return not self.mrkdwn_in or all(
+            e in self.MarkdownFields for e in self.mrkdwn_in
         )
 
     @JsonValidator(
@@ -181,13 +181,13 @@ class Attachment(JsonObject):
     def author_link_without_author_icon(self):
         return self.author_link is None or self.author_icon is not None
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.fields is not None:
-            json["fields"] = extract_json(self.fields)
-        if self.markdown_in:
-            json["mrkdwn_in"] = self.markdown_in
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.fields is not None:
+    #         json["fields"] = extract_json(self.fields)
+    #     if self.mrkdwn_in:
+    #         json["mrkdwn_in"] = self.mrkdwn_in
+    #     return json
 
 
 class BlockAttachment(Attachment):
@@ -215,11 +215,11 @@ class BlockAttachment(Attachment):
     def fields_attribute_absent(self):
         return not self.fields
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json.update({"blocks": extract_json(self.blocks)})
-        del json["fields"]  # cannot supply fields and blocks at the same time
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json.update({"blocks": extract_json(self.blocks)})
+    #     del json["fields"]  # cannot supply fields and blocks at the same time
+    #     return json
 
 
 class InteractiveAttachment(Attachment):
@@ -341,7 +341,7 @@ class InteractiveAttachment(Attachment):
     def actions_length(self):
         return len(self.actions) <= self.actions_max_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["actions"] = extract_json(self.actions)
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["actions"] = extract_json(self.actions)
+    #     return json

@@ -5,7 +5,7 @@ import warnings
 from abc import ABCMeta
 from typing import List, Optional, Set, Union
 
-from . import EnumValidator, JsonObject, JsonValidator, extract_json
+from . import EnumValidator, JsonObject, JsonValidator
 from .objects import ButtonStyles, ConfirmObject, Option, OptionGroup, PlainTextObject
 
 
@@ -24,15 +24,15 @@ class BlockElement(JsonObject, metaclass=ABCMeta):
     https://api.slack.com/reference/block-kit/block-elements
     """
 
-    def __init__(self, *, subtype: str):
+    def __init__(self, *, type: str):
         # Note: "subtype" is actually the "type" parameter,
         # but was renamed due to name already being used in Python Builtins.
-        self.subtype = subtype
-
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["type"] = self.subtype
-        return json
+        self.type = type
+    #
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["type"] = self.subtype
+    #     return json
 
 
 class InteractiveElement(BlockElement):
@@ -42,8 +42,8 @@ class InteractiveElement(BlockElement):
 
     action_id_max_length = 255
 
-    def __init__(self, *, action_id: str, subtype: str):
-        super().__init__(subtype=subtype)
+    def __init__(self, *, action_id: str, type: str):
+        super().__init__(type=type)
         self.action_id = action_id
 
     @JsonValidator(
@@ -74,7 +74,7 @@ class ImageElement(BlockElement):
                 characters.
             alt_text: Plain text summary of image. Cannot exceed 2000 characters.
         """
-        super().__init__(subtype="image")
+        super().__init__(type="image")
         self.image_url = image_url
         self.alt_text = alt_text
 
@@ -101,7 +101,7 @@ class ButtonElement(InteractiveElement):
     def __init__(
             self,
             *,
-            text: str,
+            text: PlainTextObject,
             action_id: str,
             url: str = None,
             value: str = None,
@@ -128,7 +128,7 @@ class ButtonElement(InteractiveElement):
             confirm: A ConfirmObject that defines an optional confirmation dialog
                 after this element is interacted with.
         """
-        super().__init__(action_id=action_id, subtype="button")
+        super().__init__(action_id=action_id, type="button")
         self.text = text
         self.url = url
         self.value = value
@@ -137,11 +137,11 @@ class ButtonElement(InteractiveElement):
 
     @JsonValidator(f"text attribute cannot exceed {text_max_length} characters")
     def text_length(self):
-        return len(self.text) <= self.text_max_length
+        return len(self.text.text) <= self.text_max_length
 
     @JsonValidator(f"url attribute cannot exceed {url_max_length} characters")
     def url_length(self):
-        return len(self.url) <= self.url_max_length
+        return self.url is None or len(self.url) <= self.url_max_length
 
     @JsonValidator(f"value attribute cannot exceed {value_max_length} characters")
     def value_length(self):
@@ -151,16 +151,16 @@ class ButtonElement(InteractiveElement):
     def style_valid(self):
         return self.style is None or self.style in ButtonStyles
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["text"] = PlainTextObject.direct_from_string(self.text)
-        if self.confirm is not None:
-            json["confirm"] = extract_json(self.confirm)
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["text"] = PlainTextObject.direct_from_string(self.text)
+    #     if self.confirm is not None:
+    #         json["confirm"] = extract_json(self.confirm)
+    #     return json
 
 
 class LinkButtonElement(ButtonElement):
-    def __init__(self, *, text: str, url: str, style: Optional[str] = None):
+    def __init__(self, *, text: PlainTextObject, url: str, style: Optional[str] = None):
         """
         A simple button that simply opens a given URL. You will still receive an
         interaction payload and will need to send an acknowledgement response.
@@ -183,12 +183,12 @@ class AbstractSelector(InteractiveElement, metaclass=ABCMeta):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
-            subtype: str,
+            type: str,
             confirm: Optional[ConfirmObject] = None,
     ):
-        super().__init__(action_id=action_id, subtype=subtype)
+        super().__init__(action_id=action_id, type=type)
         self.placeholder = placeholder
         self.confirm = confirm
 
@@ -196,14 +196,14 @@ class AbstractSelector(InteractiveElement, metaclass=ABCMeta):
         f"placeholder attribute cannot exceed {placeholder_max_length} characters"
     )
     def placeholder_length(self):
-        return len(self.placeholder) <= self.placeholder_max_length
+        return len(self.placeholder.text) <= self.placeholder_max_length
 
-    def to_dict(self, ) -> dict:
-        json = super().to_dict()
-        json["placeholder"] = PlainTextObject.direct_from_string(self.placeholder)
-        if self.confirm is not None:
-            json["confirm"] = extract_json(self.confirm)
-        return json
+    # def to_dict(self, ) -> dict:
+    #     json = super().to_dict()
+    #     json["placeholder"] = PlainTextObject.direct_from_string(self.placeholder)
+    #     if self.confirm is not None:
+    #         json["confirm"] = extract_json(self.confirm)
+    #     return json
 
 
 class StaticSelectElement(AbstractSelector):
@@ -213,7 +213,7 @@ class StaticSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             options: Optional[List[Option]] = None,
             option_groups: Optional[List[OptionGroup]] = None,
@@ -243,7 +243,7 @@ class StaticSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="static_select",
+            type="static_select",
             confirm=confirm,
         )
         self.options = options
@@ -269,17 +269,17 @@ class StaticSelectElement(AbstractSelector):
 
     @JsonValidator(f"options or option_groups must be specified")
     def neither_options_or_option_groups_is_specified(self):
-        return self.options is None and self.option_groups is None
+        return self.options is not None or self.option_groups is not None
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.option_groups:
-            json["option_groups"] = extract_json(self.option_groups, "block")
-        elif self.options:
-            json["options"] = extract_json(self.options, "block")
-        if self.initial_option is not None:
-            json["initial_option"] = extract_json(self.initial_option, "block")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.option_groups:
+    #         json["option_groups"] = [option.to_dict() for option in self.option_groups]
+    #     elif self.options:
+    #         json["options"] = [option.to_dict() for option in self.options]
+    #     if self.initial_option is not None:
+    #         json["initial_option"] = self.initial_option.to_dict()
+    #     return json
 
 
 class StaticMultiSelectElement(AbstractSelector):
@@ -289,7 +289,7 @@ class StaticMultiSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             options: Optional[List[Option]] = None,
             option_groups: Optional[List[OptionGroup]] = None,
@@ -319,7 +319,7 @@ class StaticMultiSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="multi_static_select",
+            type="multi_static_select",
             confirm=confirm,
         )
         self.options = options
@@ -347,11 +347,11 @@ class StaticMultiSelectElement(AbstractSelector):
     def to_dict(self) -> dict:
         json = super().to_dict()
         if self.option_groups:
-            json["option_groups"] = extract_json(self.option_groups, "block")
+            json["option_groups"] = [option.to_dict() for option in self.option_groups]
         else:
-            json["options"] = extract_json(self.options, "block")
+            json["options"] = [option.to_dict() for option in self.options]
         if self.initial_options is not None:
-            json["initial_options"] = extract_json(self.initial_options, "block")
+            json["initial_options"] = [option.to_dict() for option in self.initial_options]
         return json
 
 
@@ -361,7 +361,7 @@ class SelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             options: List[Union[Option, OptionGroup]],
             initial_option: Optional[Option] = None,
@@ -389,7 +389,7 @@ class SelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="static_select",
+            type="static_select",
             confirm=confirm,
         )
         self.options = options
@@ -406,11 +406,11 @@ class SelectElement(AbstractSelector):
     def to_dict(self) -> dict:
         json = super().to_dict()
         if isinstance(self.options[0], OptionGroup):
-            json["option_groups"] = extract_json(self.options, "block")
+            json["option_groups"] = [option.to_dict() for option in self.options]
         else:
-            json["options"] = extract_json(self.options, "block")
+            json["options"] = [option.to_dict() for option in self.options]
         if self.initial_option is not None:
-            json["initial_option"] = extract_json(self.initial_option, "block")
+            json["initial_option"] = self.initial_option.to_dict()
         return json
 
 
@@ -422,7 +422,7 @@ class ExternalDataSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_option: Union[Optional[Option], Optional[OptionGroup]] = None,
             min_query_length: Optional[int] = None,
@@ -451,18 +451,18 @@ class ExternalDataSelectElement(AbstractSelector):
         """
         super().__init__(
             action_id=action_id,
-            subtype="external_select",
+            type="external_select",
             placeholder=placeholder,
             confirm=confirm,
         )
         self.initial_option = initial_option
         self.min_query_length = min_query_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.initial_option is not None:
-            json["initial_option"] = extract_json(self.initial_option, "block")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.initial_option is not None:
+    #         json["initial_option"] = [option.to_dict() for option in self.initial_option]
+    #     return json
 
 
 class ExternalDataMultiSelectElement(AbstractSelector):
@@ -473,7 +473,7 @@ class ExternalDataMultiSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_options: Union[Optional[Option], Optional[OptionGroup]] = None,
             min_query_length: Optional[int] = None,
@@ -502,25 +502,25 @@ class ExternalDataMultiSelectElement(AbstractSelector):
         """
         super().__init__(
             action_id=action_id,
-            subtype="multi_external_select",
+            type="multi_external_select",
             placeholder=placeholder,
             confirm=confirm,
         )
         self.initial_options = initial_options
         self.min_query_length = min_query_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.initial_options is not None:
-            json["initial_options"] = extract_json(self.initial_options, "block")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.initial_options is not None:
+    #         json["initial_options"] = extract_json(self.initial_options, "block")
+    #     return json
 
 
 class UserSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_user: Optional[str] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -543,7 +543,7 @@ class UserSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="users_select",
+            type="users_select",
             confirm=confirm,
         )
         self.initial_user = initial_user,
@@ -553,7 +553,7 @@ class UserMultiSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_users: Optional[List[str]] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -577,7 +577,7 @@ class UserMultiSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="multi_users_select",
+            type="multi_users_select",
             confirm=confirm,
         )
         self.initial_users = initial_users
@@ -587,7 +587,7 @@ class ConversationSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_conversation: Optional[str] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -610,7 +610,7 @@ class ConversationSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="conversations_select",
+            type="conversations_select",
             confirm=confirm,
         )
         self.initial_conversation = initial_conversation,
@@ -620,7 +620,7 @@ class ConversationMultiSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_conversations: Optional[List[str]] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -644,7 +644,7 @@ class ConversationMultiSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="multi_conversations_select",
+            type="multi_conversations_select",
             confirm=confirm,
         )
         self.initial_conversations = initial_conversations
@@ -654,7 +654,7 @@ class ChannelSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_channel: Optional[str] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -677,7 +677,7 @@ class ChannelSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="channels_select",
+            type="channels_select",
             confirm=confirm,
         )
         self.initial_channel = initial_channel
@@ -687,7 +687,7 @@ class ChannelMultiSelectElement(AbstractSelector):
     def __init__(
             self,
             *,
-            placeholder: str,
+            placeholder: PlainTextObject,
             action_id: str,
             initial_channels: Optional[List[str]] = None,
             confirm: Optional[ConfirmObject] = None,
@@ -711,14 +711,14 @@ class ChannelMultiSelectElement(AbstractSelector):
         super().__init__(
             placeholder=placeholder,
             action_id=action_id,
-            subtype="multi_channels_select",
+            type="multi_channels_select",
             confirm=confirm
         )
         self.initial_channels = initial_channels
 
 
 class OverflowMenuOption(Option):
-    def __init__(self, label: str, value: str, url: Optional[str] = None):
+    def __init__(self, text: PlainTextObject, value: str, url: Optional[str] = None):
         """
         An extension of a standard option, but with an optional 'url' attribute,
         which will simply directly navigate to a given URL. Only valid in
@@ -727,7 +727,7 @@ class OverflowMenuOption(Option):
         https://api.slack.com/reference/messaging/composition-objects#option
 
         Args:
-              label: A short, user-facing string to label this option to users.
+              text: A short, user-facing string to label this option to users.
                 Cannot exceed 75 characters.
             value: A short string that identifies this particular option to your
                 application. It will be part of the payload when this option is
@@ -737,14 +737,14 @@ class OverflowMenuOption(Option):
                 you'll still receive an interaction payload and will need to send an
                 acknowledgement response.
         """
-        super().__init__(label=label, value=value)
+        super().__init__(text=text, value=value)
         self.url = url
 
-    def to_dict(self, option_type: str = "block") -> dict:
-        json = super().to_dict(option_type)
-        if self.url is not None:
-            json["url"] = self.url
-        return json
+    # def to_dict(self, option_type: str = "block") -> dict:
+    #     json = super().to_dict(option_type)
+    #     if self.url is not None:
+    #         json["url"] = self.url
+    #     return json
 
 
 class OverflowMenuElement(InteractiveElement):
@@ -779,7 +779,7 @@ class OverflowMenuElement(InteractiveElement):
             confirm: A ConfirmObject that defines an optional confirmation dialog
                 after this element is interacted with.
         """
-        super().__init__(action_id=action_id, subtype="overflow")
+        super().__init__(action_id=action_id, type="overflow")
         self.options = options
         self.confirm = confirm
 
@@ -790,12 +790,12 @@ class OverflowMenuElement(InteractiveElement):
     def options_length(self):
         return self.options_min_length < len(self.options) <= self.options_max_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["options"] = extract_json(self.options, "block")
-        if self.confirm is not None:
-            json["confirm"] = extract_json(self.confirm)
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["options"] = extract_json(self.options, "block")
+    #     if self.confirm is not None:
+    #         json["confirm"] = extract_json(self.confirm)
+    #     return json
 
 
 class DatePickerElement(AbstractSelector):
@@ -807,7 +807,7 @@ class DatePickerElement(AbstractSelector):
             self,
             *,
             action_id: str,
-            placeholder: Optional[str] = None,
+            placeholder: Optional[PlainTextObject] = None,
             initial_date: Optional[str] = None,
             confirm: Optional[ConfirmObject] = None,
     ):
@@ -829,7 +829,7 @@ class DatePickerElement(AbstractSelector):
         """
         super().__init__(
             action_id=action_id,
-            subtype="datepicker",
+            type="datepicker",
             placeholder=placeholder,
             confirm=confirm,
         )

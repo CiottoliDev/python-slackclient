@@ -10,40 +10,42 @@ from slack.web.classes.actions import (
     ActionStaticSelector,
     ActionUserSelector,
 )
-from slack.web.classes.objects import ConfirmObject, Option, OptionGroup
+from slack.web.classes.objects import ConfirmObject, Option, OptionGroup, PlainTextObject, MarkdownTextObject
 from tests.web.classes import STRING_3001_CHARS
 
 
 class ButtonTests(unittest.TestCase):
-    def test_json(self):
-        self.assertDictEqual(
-            ActionButton(name="button_1", text="Click me!", value="btn_1").to_dict(),
-            {
-                "name": "button_1",
-                "text": "Click me!",
-                "value": "btn_1",
-                "type": "button",
-            },
-        )
 
-        confirm = ConfirmObject(title="confirm_title", text="confirm_text")
-        self.assertDictEqual(
-            ActionButton(
-                name="button_1",
-                text="Click me!",
-                value="btn_1",
-                confirm=confirm,
-                style="danger",
-            ).to_dict(),
-            {
-                "name": "button_1",
-                "text": "Click me!",
-                "value": "btn_1",
-                "type": "button",
-                "confirm": confirm.to_dict("action"),
-                "style": "danger",
-            },
-        )
+    def test_json_simple(self):
+        button = ActionButton(name="button_1", text="Click me!", value="btn_1").to_dict()
+        coded = {
+            "name": "button_1",
+            "text": "Click me!",
+            "value": "btn_1",
+            "type": "button",
+        }
+        self.assertDictEqual(button, coded)
+
+    def test_json_with_confirm(self):
+        confirm = ConfirmObject(title=PlainTextObject(text="confirm_title"),
+                                text=MarkdownTextObject(text="confirm_text"))
+        button = ActionButton(
+            name="button_1",
+            text="Click me!",
+            value="btn_1",
+            confirm=confirm,
+            style="danger",
+        ).to_dict()
+
+        coded = {
+            "name": "button_1",
+            "text": "Click me!",
+            "value": "btn_1",
+            "type": "button",
+            "confirm": confirm.to_dict("action"),
+            "style": "danger",
+        }
+        self.assertDictEqual(button, coded)
 
     def test_value_length(self):
         with self.assertRaises(SlackObjectFormationError):
@@ -79,20 +81,18 @@ class StaticActionSelectorTests(unittest.TestCase):
 
         self.option_group = [OptionGroup(label="group_1", options=self.options)]
 
-    def test_json(self):
-        self.assertDictEqual(
-            ActionStaticSelector(
-                name="select_1", text="selector_1", options=self.options
-            ).to_dict(),
-            {
+    def test_json_with_option(self):
+        selector = ActionStaticSelector(name="select_1", text="selector_1", options=self.options).to_dict()
+        coded = {
                 "name": "select_1",
                 "text": "selector_1",
                 "options": [o.to_dict("action") for o in self.options],
                 "type": "select",
                 "data_source": "static",
-            },
-        )
+            }
+        self.assertDictEqual(selector, coded)
 
+    def test_json_with_option_group(self):
         self.assertDictEqual(
             ActionStaticSelector(
                 name="select_1", text="selector_1", options=self.option_group

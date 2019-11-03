@@ -19,11 +19,11 @@ from .objects import Option, OptionGroup
 class DialogBuilder(JsonObject):
     attributes = {}  # no attributes because to_dict has unique implementation
 
-    _callback_id: Optional[str]
-    _elements: List[Union[DialogTextComponent, AbstractDialogSelector]]
-    _submit_label: Optional[str]
-    _notify_on_cancel: bool
-    _state: Optional[str]
+    callback_id: Optional[str]
+    elements: List[Union[DialogTextComponent, AbstractDialogSelector]]
+    submit_label: Optional[str]
+    notify_on_cancel: bool
+    state: Optional[str]
 
     title_max_length = 24
     submit_label_max_length = 24
@@ -35,12 +35,12 @@ class DialogBuilder(JsonObject):
         Create a DialogBuilder to more easily construct the JSON required to submit a
         dialog to Slack
         """
-        self._title = None
-        self._callback_id = None
-        self._elements = []
-        self._submit_label = None
-        self._notify_on_cancel = False
-        self._state = None
+        self.title = None
+        self.callback_id = None
+        self.elements = []
+        self.submit_label = None
+        self.notify_on_cancel = False
+        self.state = None
 
     def title(self, title: str) -> "DialogBuilder":
         """
@@ -49,7 +49,7 @@ class DialogBuilder(JsonObject):
         Args:
           title: must not exceed 24 characters
         """
-        self._title = title
+        self.title = title
         return self
 
     def state(self, state: Union[dict, str]) -> "DialogBuilder":
@@ -62,9 +62,9 @@ class DialogBuilder(JsonObject):
                 back to your application on submission
         """
         if isinstance(state, dict):
-            self._state = dumps(state)
+            self.state = dumps(state)
         else:
-            self._state = state
+            self.state = state
         return self
 
     def callback_id(self, callback_id: str) -> "DialogBuilder":
@@ -75,7 +75,7 @@ class DialogBuilder(JsonObject):
         Args:
           callback_id: a string identifying this particular dialog
         """
-        self._callback_id = callback_id
+        self.callback_id = callback_id
         return self
 
     def submit_label(self, label: str) -> "DialogBuilder":
@@ -87,7 +87,7 @@ class DialogBuilder(JsonObject):
             label: must not exceed 24 characters, and must be a single word (no
                 spaces)
         """
-        self._submit_label = label
+        self.submit_label = label
         return self
 
     def notify_on_cancel(self, notify: bool) -> "DialogBuilder":
@@ -99,7 +99,7 @@ class DialogBuilder(JsonObject):
             notify: Set to True to indicate that your application should receive a
                 request even if the user cancels interaction with the dialog.
         """
-        self._notify_on_cancel = notify
+        self.notify_on_cancel = notify
         return self
 
     def text_field(
@@ -138,7 +138,7 @@ class DialogBuilder(JsonObject):
                     or url. In some form factors, optimized input is provided for this
                     subtype.
         """
-        self._elements.append(
+        self.elements.append(
             DialogTextField(
                 name=name,
                 label=label,
@@ -193,7 +193,7 @@ class DialogBuilder(JsonObject):
                 or url. In some form factors, optimized input is provided for this
                 subtype.
         """
-        self._elements.append(
+        self.elements.append(
             DialogTextArea(
                 name=name,
                 label=label,
@@ -239,7 +239,7 @@ class DialogBuilder(JsonObject):
             placeholder: A string displayed as needed to help guide users in
                 completing the element. 150 character maximum.
         """
-        self._elements.append(
+        self.elements.append(
             DialogStaticSelector(
                 name=name,
                 label=label,
@@ -285,7 +285,7 @@ class DialogBuilder(JsonObject):
             placeholder: A string displayed as needed to help guide users in
                 completing the element. 150 character maximum.
         """
-        self._elements.append(
+        self.elements.append(
             DialogExternalSelector(
                 name=name,
                 label=label,
@@ -323,7 +323,7 @@ class DialogBuilder(JsonObject):
             placeholder: A string displayed as needed to help guide users in
                 completing the element. 150 character maximum.
         """
-        self._elements.append(
+        self.elements.append(
             DialogUserSelector(
                 name=name,
                 label=label,
@@ -358,7 +358,7 @@ class DialogBuilder(JsonObject):
             placeholder: A string displayed as needed to help guide users in
                 completing the element. 150 character maximum.
         """
-        self._elements.append(
+        self.elements.append(
             DialogChannelSelector(
                 name=name,
                 label=label,
@@ -394,7 +394,7 @@ class DialogBuilder(JsonObject):
             placeholder: A string displayed as needed to help guide users in
                 completing the element. 150 character maximum.
         """
-        self._elements.append(
+        self.elements.append(
             DialogConversationSelector(
                 name=name,
                 label=label,
@@ -407,45 +407,45 @@ class DialogBuilder(JsonObject):
 
     @JsonValidator("title attribute is required")
     def title_present(self):
-        return self._title is not None
+        return self.title is not None
 
     @JsonValidator(f"title attribute cannot exceed {title_max_length} characters")
     def title_length(self):
-        return self._title is not None and len(self._title) <= self.title_max_length
+        return self.title is not None and len(self.title) <= self.title_max_length
 
     @JsonValidator("callback_id attribute is required")
     def callback_id_present(self):
-        return self._callback_id is not None
+        return self.callback_id is not None
 
     @JsonValidator(f"dialogs must contain between 1 and {elements_max_length} elements")
     def elements_length(self):
-        return 0 < len(self._elements) <= self.elements_max_length
+        return 0 < len(self.elements) <= self.elements_max_length
 
     @JsonValidator(f"submit_label cannot exceed {submit_label_max_length} characters")
     def submit_label_length(self):
         return (
-            self._submit_label is None
-            or len(self._submit_label) <= self.submit_label_max_length
+                self.submit_label is None
+                or len(self.submit_label) <= self.submit_label_max_length
         )
 
     @JsonValidator("submit_label can only be one word")
     def submit_label_valid(self):
-        return self._submit_label is None or " " not in self._submit_label
+        return self.submit_label is None or " " not in self.submit_label
 
     @JsonValidator(f"state cannot exceed {state_max_length} characters")
     def state_length(self):
-        return not self._state or len(self._state) <= self.state_max_length
+        return not self.state or len(self.state) <= self.state_max_length
 
-    def to_dict(self) -> dict:
-        self.validate_json()
-        json = {
-            "title": self._title,
-            "callback_id": self._callback_id,
-            "elements": extract_json(self._elements),
-            "notify_on_cancel": self._notify_on_cancel,
-        }
-        if self._submit_label is not None:
-            json["submit_label"] = self._submit_label
-        if self._state is not None:
-            json["state"] = self._state
-        return json
+    # def to_dict(self) -> dict:
+    #     self.validate_json()
+    #     json = {
+    #         "title": self.title,
+    #         "callback_id": self.callback_id,
+    #         "elements": extract_json(self.elements),
+    #         "notify_on_cancel": self.notify_on_cancel,
+    #     }
+    #     if self.submit_label is not None:
+    #         json["submit_label"] = self.submit_label
+    #     if self.state is not None:
+    #         json["state"] = self.state
+    #     return json

@@ -40,7 +40,7 @@ class Message(JsonObject):
         self.text = text
         self.attachments = attachments or []
         self.blocks = blocks or []
-        self.markdown = markdown
+        self.mrkdwn = markdown
 
     @JsonValidator(
         f"attachments attribute cannot exceed {attachments_max_length} items"
@@ -51,20 +51,20 @@ class Message(JsonObject):
             or len(self.attachments) <= self.attachments_max_length
         )
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if len(self.text) > 40000:
-            LOGGER.error(
-                "Messages over 40,000 characters are automatically truncated by Slack"
-            )
-        if self.text and self.blocks:
-            #  Slack doesn't render the text property if there are blocks, so:
-            LOGGER.info(
-                "text attribute is treated as fallback text if blocks are attached to "
-                "a message - insert text as a new SectionBlock if you want it to be "
-                "displayed "
-            )
-        json["attachments"] = extract_json(self.attachments)
-        json["blocks"] = extract_json(self.blocks)
-        json["mrkdwn"] = self.markdown
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if len(self.text) > 40000:
+    #         LOGGER.error(
+    #             "Messages over 40,000 characters are automatically truncated by Slack"
+    #         )
+    #     if self.text and self.blocks:
+    #         #  Slack doesn't render the text property if there are blocks, so:
+    #         LOGGER.info(
+    #             "text attribute is treated as fallback text if blocks are attached to "
+    #             "a message - insert text as a new SectionBlock if you want it to be "
+    #             "displayed "
+    #         )
+    #     json["attachments"] = extract_json(self.attachments)
+    #     json["blocks"] = extract_json(self.blocks)
+    #     json["mrkdwn"] = self.mrkdwn
+    #     return json

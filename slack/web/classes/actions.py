@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Set, Union
 
-from . import EnumValidator, JsonObject, JsonValidator, extract_json
+from . import EnumValidator, JsonObject, JsonValidator
 from .objects import (
     ButtonStyles,
     ConfirmObject,
@@ -21,26 +21,26 @@ class Action(JsonObject):
     attributes = {"name", "text", "url"}
 
     def __init__(
-        self,
-        *,
-        text: str,
-        subtype: str,
-        name: Optional[str] = None,
-        url: Optional[str] = None,
+            self,
+            *,
+            text: str,
+            subtype: str,
+            name: Optional[str] = None,
+            url: Optional[str] = None,
     ):
         self.name = name
         self.url = url
         self.text = text
-        self.subtype = subtype
+        self.type = subtype
 
     @JsonValidator("name or url attribute is required")
     def name_or_url_present(self):
         return self.name is not None or self.url is not None
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        json["type"] = self.subtype
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     json["type"] = self.subtype
+    #     return json
 
 
 class ActionButton(Action):
@@ -51,13 +51,13 @@ class ActionButton(Action):
     value_max_length = 2000
 
     def __init__(
-        self,
-        *,
-        name: str,
-        text: str,
-        value: str,
-        confirm: Optional[ConfirmObject] = None,
-        style: Optional[str] = None,
+            self,
+            *,
+            name: str,
+            text: str,
+            value: str,
+            confirm: Optional[ConfirmObject] = None,
+            style: Optional[str] = None,
     ):
         """
         Simple button for use inside attachments
@@ -93,11 +93,11 @@ class ActionButton(Action):
     def style_valid(self):
         return self.style is None or self.style in ButtonStyles
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if self.confirm is not None:
-            json["confirm"] = extract_json(self.confirm, "action")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if self.confirm is not None:
+    #         json["confirm"] = extract_json(self.confirm, "action")
+    #     return json
 
 
 class ActionLinkButton(Action):
@@ -125,7 +125,7 @@ class AbstractActionSelector(Action, metaclass=ABCMeta):
         pass
 
     def __init__(
-        self, *, name: str, text: str, selected_option: Optional[Option] = None
+            self, *, name: str, text: str, selected_option: Optional[Option] = None
     ):
         super().__init__(text=text, name=name, subtype="select")
         self.selected_option = selected_option
@@ -139,7 +139,7 @@ class AbstractActionSelector(Action, metaclass=ABCMeta):
         if self.selected_option is not None:
             # this is a special case for ExternalActionSelectElement - in that case,
             # you pass the initial value of the selector as a selected_options array
-            json["selected_options"] = extract_json([self.selected_option], "action")
+            json["selected_options"] = self.selected_option.to_dict()  # extract_json([self.selected_option], "action")
         return json
 
 
@@ -157,12 +157,13 @@ class ActionStaticSelector(AbstractActionSelector):
     options_max_length = 100
 
     def __init__(
-        self,
-        *,
-        name: str,
-        text: str,
-        options: List[Union[Option, OptionGroup]],
-        selected_option: Optional[Option] = None,
+            self,
+            *,
+            name: str,
+            text: str,
+            options: List[Union[Option]],
+            option_groups: List[OptionGroup] = None,
+            selected_option: Optional[Option] = None,
     ):
         """
         Help users make clear, concise decisions by providing a menu of options
@@ -182,18 +183,19 @@ class ActionStaticSelector(AbstractActionSelector):
         """
         super().__init__(name=name, text=text, selected_option=selected_option)
         self.options = options
+        self.option_groups = option_groups
 
     @JsonValidator(f"options attribute cannot exceed {options_max_length} items")
     def options_length(self):
         return len(self.options) < self.options_max_length
 
-    def to_dict(self) -> dict:
-        json = super().to_dict()
-        if isinstance(self.options[0], OptionGroup):
-            json["option_groups"] = extract_json(self.options, "action")
-        else:
-            json["options"] = extract_json(self.options, "action")
-        return json
+    # def to_dict(self) -> dict:
+    #     json = super().to_dict()
+    #     if isinstance(self.options[0], OptionGroup):
+    #         json["option_groups"] =
+    #     else:
+    #         json["options"] = extract_json(self.options, "action")
+    #     return json
 
 
 class ActionUserSelector(AbstractActionSelector):
@@ -243,7 +245,7 @@ class ActionConversationSelector(AbstractActionSelector):
     data_source = "conversations"
 
     def __init__(
-        self, name: str, text: str, selected_conversation: Optional[Option] = None
+            self, name: str, text: str, selected_conversation: Optional[Option] = None
     ):
         """
         Automatically populate the selector with a list of conversations they have in
@@ -271,12 +273,12 @@ class ActionExternalSelector(AbstractActionSelector):
         return super().attributes.union({"min_query_length"})
 
     def __init__(
-        self,
-        *,
-        name: str,
-        text: str,
-        selected_option: Optional[Option] = None,
-        min_query_length: Optional[int] = None,
+            self,
+            *,
+            name: str,
+            text: str,
+            selected_option: Optional[Option] = None,
+            min_query_length: Optional[int] = None,
     ):
         """
         Populate a message select menu from your own application dynamically.

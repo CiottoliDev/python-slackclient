@@ -1,3 +1,5 @@
+import json
+import sys
 from abc import ABCMeta, abstractmethod
 from functools import wraps
 from typing import Callable, Iterable, List, Set, Union
@@ -29,18 +31,24 @@ class JsonObject(BaseObject, metaclass=ABCMeta):
             if callable(method) and hasattr(method, "validator"):
                 method()
 
-    def get_non_null_attributes(self) -> dict:
+    def get_non_null_attributes(self, dict_: dict = attributes) -> dict:
         """
         Construct a dictionary out of non-null keys (from attributes property)
         present on this object
         """
-        return {
-            key: getattr(self, key, None)
-            for key in sorted(self.attributes)
-            if getattr(self, key, None) is not None
-        }
+        return {key: value for key, value in dict_.items() if value is not None}
 
     def to_dict(self, *args) -> dict:
+        self.validate_json()
+        if sys.version_info < (3, 7):
+            return self.to_dict_old(*args)
+        _json = json.dumps(self, default=lambda o: o.__dict__)
+        _dict = json.loads(_json, object_hook=self.get_non_null_attributes)
+       # _dict_not_null = self.get_non_null_attributes(_dict)
+
+        return _dict
+
+    def to_dict_old(self, *args) -> dict:
         """
         Extract this object as a JSON-compatible, Slack-API-valid dictionary
 
@@ -50,13 +58,13 @@ class JsonObject(BaseObject, metaclass=ABCMeta):
         Raises:
           SlackObjectFormationError if the object was not valid
         """
-        self.validate_json()
-        return self.get_non_null_attributes()
+        # return self.get_non_null_attributes()
+        raise NotImplementedError()
 
     def __repr__(self):
-        json = self.get_non_null_attributes()
-        if json:
-            return f"<slack.{self.__class__.__name__}: {json}>"
+        _json = self.get_non_null_attributes()
+        if _json:
+            return f"<slack.{self.__class__.__name__}: {_json}>"
         else:
             return self.__str__()
 
@@ -90,9 +98,7 @@ class EnumValidator(JsonValidator):
         )
 
 
-def extract_json(
-    item_or_items: Union[JsonObject, List[JsonObject], str], *format_args
-) -> Union[dict, List[dict], str]:
+def extract_json(item_or_items: Union[JsonObject, List[JsonObject], str], *format_args) -> Union[dict, List[dict], str]:
     """
     Given a sequence (or single item), attempt to call the to_dict() method on each
     item and return a plain list. If item is not the expected type, return it

@@ -32,16 +32,16 @@ class ModalBuilder(JsonObject):
     https://api.slack.com/block-kit/surfaces/modals
     """
 
-    _type: str
-    _title: PlainTextObject
-    _blocks: List[Block]
-    _close: Optional[PlainTextObject]
-    _submit: Optional[PlainTextObject]
-    _private_metadata: Optional[str]
-    _callback_id: Optional[str]
-    _clear_on_close: Optional[bool]
-    _notify_on_close: Optional[bool]
-    _external_id: Optional[str]
+    type: str
+    title: PlainTextObject
+    blocks: List[Block]
+    close: Optional[PlainTextObject]
+    submit: Optional[PlainTextObject]
+    private_metadata: Optional[str]
+    callback_id: Optional[str]
+    clear_on_close: Optional[bool]
+    notify_on_close: Optional[bool]
+    external_id: Optional[str]
 
     title_max_length = 24
     blocks_max_length = 100
@@ -51,28 +51,28 @@ class ModalBuilder(JsonObject):
     callback_id_max_length = 255
 
     attributes = {
-        "_title",
-        "_blocks",
-        "_close",
-        "_submit",
-        "_private_metadata",
-        "_callback_id",
-        "_clear_on_close",
-        "_notify_on_close",
-        "_external_id",
+        "title",
+        "blocks",
+        "close",
+        "submit",
+        "private_metadata",
+        "callback_id",
+        "clear_on_close",
+        "notify_on_close",
+        "external_id",
     }
 
     def __init__(self):
-        self._type = "modal"
-        self._title = None
-        self._blocks = []
-        self._close = None
-        self._submit = None
-        self._private_metadata = None
-        self._callback_id = None
-        self._clear_on_close = False
-        self._notify_on_close = False
-        self._external_id = None
+        self.type = "modal"
+        self.title = None
+        self.blocks = []
+        self.close = None
+        self.submit = None
+        self.private_metadata = None
+        self.callback_id = None
+        self.clear_on_close = False
+        self.notify_on_close = False
+        self.external_id = None
 
     def title(self, title: str) -> "ModalBuilder":
         """
@@ -81,7 +81,7 @@ class ModalBuilder(JsonObject):
         Args:
           title: must not exceed 24 characters
         """
-        self._title = PlainTextObject(text=title)
+        self.title = PlainTextObject(text=title)
         return self
 
     def close(self, close: str) -> "ModalBuilder":
@@ -93,7 +93,7 @@ class ModalBuilder(JsonObject):
         Args:
           close: must not exceed 24 characters
         """
-        self._close = PlainTextObject(text=close)
+        self.close = PlainTextObject(text=close)
         return self
 
     def submit(self, submit: str) -> "ModalBuilder":
@@ -107,7 +107,7 @@ class ModalBuilder(JsonObject):
         Args:
           submit: must not exceed 24 characters
         """
-        self._submit = PlainTextObject(text=submit)
+        self.submit = PlainTextObject(text=submit)
         return self
 
     def private_metadata(self, private_metadata: str) -> "ModalBuilder":
@@ -117,7 +117,7 @@ class ModalBuilder(JsonObject):
         Args:
           private_metadata: must not exceed 3000 characters
         """
-        self._private_metadata = private_metadata
+        self.private_metadata = private_metadata
         return self
 
     def callback_id(self, callback_id: str) -> "ModalBuilder":
@@ -127,7 +127,7 @@ class ModalBuilder(JsonObject):
         Args:
           callback_id: must not exceed 255 characters
         """
-        self._callback_id = callback_id
+        self.callback_id = callback_id
         return self
 
     def clear_on_close(self, clear_on_close: bool) -> "ModalBuilder":
@@ -137,7 +137,7 @@ class ModalBuilder(JsonObject):
         Args:
           clear_on_close: Default is false.
         """
-        self._clear_on_close = clear_on_close
+        self.clear_on_close = clear_on_close
         return self
 
     def notify_on_close(self, notify_on_close: bool) -> "ModalBuilder":
@@ -147,7 +147,7 @@ class ModalBuilder(JsonObject):
         Args:
           notify_on_close: Default is false.
         """
-        self._notify_on_close = notify_on_close
+        self.notify_on_close = notify_on_close
         return self
 
     def external_id(self, external_id: str) -> "ModalBuilder":
@@ -156,7 +156,7 @@ class ModalBuilder(JsonObject):
         Args:
           external_id: A unique identifier.
         """
-        self._external_id = external_id
+        self.external_id = external_id
         return self
 
     def section(
@@ -191,7 +191,7 @@ class ModalBuilder(JsonObject):
             accessory: an optional BlockElement to attach to this SectionBlock as
                 secondary content
         """
-        self._blocks.append(
+        self.blocks.append(
             SectionBlock(
                 text=text, block_id=block_id, fields=fields, accessory=accessory
             )
@@ -212,7 +212,7 @@ class ModalBuilder(JsonObject):
 
         https://api.slack.com/reference/block-kit/blocks#divider
         """
-        self._blocks.append(DividerBlock(block_id=block_id))
+        self.blocks.append(DividerBlock(block_id=block_id))
         return self
 
     def image(
@@ -236,7 +236,7 @@ class ModalBuilder(JsonObject):
             block_id: ID to be used for this block - autogenerated if left blank.
                 Cannot exceed 255 characters.
         """
-        self._blocks.append(
+        self.blocks.append(
             ImageBlock(
                 image_url=image_url, alt_text=alt_text, title=title, block_id=block_id
             )
@@ -255,7 +255,7 @@ class ModalBuilder(JsonObject):
             block_id: ID to be used for this block - autogenerated if left blank.
                 Cannot exceed 255 characters.
         """
-        self._blocks.append(ActionsBlock(elements=elements, block_id=block_id))
+        self.blocks.append(ActionsBlock(elements=elements, block_id=block_id))
         return self
 
     def context(
@@ -270,13 +270,13 @@ class ModalBuilder(JsonObject):
             block_id: ID to be used for this block - autogenerated if left blank.
                 Cannot exceed 255 characters.
         """
-        self._blocks.append(ContextBlock(elements=elements, block_id=block_id))
+        self.blocks.append(ContextBlock(elements=elements, block_id=block_id))
         return self
 
     def input(
         self,
         *,
-        label: str,
+        label: PlainTextObject,
         element: Union[str, AbstractSelector],
         hint: Optional[str] = None,
         optional: Optional[bool] = False,
@@ -300,7 +300,7 @@ class ModalBuilder(JsonObject):
             optional: A boolean that indicates whether the input element
                 may be empty when a user submits the modal. Defaults to false.
         """
-        self._blocks.append(
+        self.blocks.append(
             InputBlock(label=label, element=element, hint=hint, optional=optional)
         )
         return self
@@ -316,33 +316,33 @@ class ModalBuilder(JsonObject):
 
         https://api.slack.com/reference/block-kit/blocks#file
         """
-        self._blocks.append(
+        self.blocks.append(
             FileBlock(external_id=external_id, source=source, block_id=block_id)
         )
         return self
 
     @JsonValidator(f"title must be between 1 and {title_max_length} characters")
     def title_length(self):
-        if self._title is not None:
-            return len(self._title.text) <= self.title_max_length
+        if self.title is not None:
+            return len(self.title.text) <= self.title_max_length
 
         return False
 
     @JsonValidator(f"modals must contain between 1 and {blocks_max_length} blocks")
     def blocks_length(self):
-        return 0 < len(self._blocks) <= self.blocks_max_length
+        return 0 < len(self.blocks) <= self.blocks_max_length
 
     @JsonValidator(f"close cannot exceed {close_max_length} characters")
     def close_length(self):
-        if self._close is not None:
-            return len(self._close.text) <= self.close_max_length
+        if self.close is not None:
+            return len(self.close.text) <= self.close_max_length
 
         return True
 
     @JsonValidator(f"submit cannot exceed {submit_max_length} characters")
     def submit_length(self):
-        if self._submit is not None:
-            return len(self._submit.text) <= self.submit_max_length
+        if self.submit is not None:
+            return len(self.submit.text) <= self.submit_max_length
 
         return True
 
@@ -350,41 +350,41 @@ class ModalBuilder(JsonObject):
         f"submit is required when an 'input' block is within the blocks array"
     )
     def submit_required_when_input_block_used(self):
-        if self._submit is None:
-            return InputBlock not in [b.__class__ for b in self._blocks]
+        if self.submit is None:
+            return InputBlock not in [b.__class__ for b in self.blocks]
 
         return True
 
     @JsonValidator(
         f"private_metadata cannot exceed {private_metadata_max_length} characters"
     )
-    def private_metadata_max_length(self):
-        if self._private_metadata is None:
+    def private_metadata__length(self):
+        if self.private_metadata is None:
             return True
 
-        return len(self._private_metadata) <= self.private_metadata_max_length
+        return len(self.private_metadata) <= self.private_metadata_max_length
 
     @JsonValidator(f"callback_id cannot exceed {callback_id_max_length} characters")
-    def callback_id_max_length(self):
-        if self._callback_id is None:
+    def callback_id__length(self):
+        if self.callback_id is None:
             return True
 
-        return len(self._callback_id) <= self.callback_id_max_length
+        return len(self.callback_id) <= self.callback_id_max_length
 
     def to_dict(self) -> dict:
         self.validate_json()
 
         fields = {
-            "type": self._type,
-            "title": extract_json(self._title),
-            "blocks": extract_json(self._blocks),
-            "close": extract_json(self._close),
-            "submit": extract_json(self._submit),
-            "private_metadata": self._private_metadata,
-            "callback_id": self._callback_id,
-            "clear_on_close": self._clear_on_close,
-            "notify_on_close": self._notify_on_close,
-            "external_id": self._external_id,
+            "type": self.type,
+            "title": extract_json(self.title),
+            "blocks": extract_json(self.blocks),
+            "close": extract_json(self.close),
+            "submit": extract_json(self.submit),
+            "private_metadata": self.private_metadata,
+            "callback_id": self.callback_id,
+            "clear_on_close": self.clear_on_close,
+            "notify_on_close": self.notify_on_close,
+            "external_id": self.external_id,
         }
 
         return {k: v for k, v in fields.items() if v is not None}
