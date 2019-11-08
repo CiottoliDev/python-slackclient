@@ -22,8 +22,6 @@ class TestModals(unittest.TestCase):
             .to_dict()
         coded = {
             "type": "modal",
-            "clear_on_close": False,
-            "notify_on_close": False,
             "title": {
                 "type": "plain_text",
                 "text": "Test Check title",
@@ -62,11 +60,9 @@ class TestModals(unittest.TestCase):
                         },
                         "action_id": "plain_text"
                     },
-                    "optional": False
                 },
                 {
                     "type": "input",
-                    "optional": False,
                     "element": {
                         "type": "multi_users_select",
                         "action_id": "users",

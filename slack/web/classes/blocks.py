@@ -288,14 +288,6 @@ class InputBlock(Block):
     def hint_length(self):
         return self.hint is None or len(self.hint) <= self.hint_max_length
 
-    # def to_dict(self) -> dict:
-    #     json = super().to_dict()
-    #     if isinstance(self.element, str):
-    #         json["element"] = PlainTextObject.direct_from_string(self.element)
-    #     else:
-    #         json["element"] = extract_json(self.element)
-    #     return json
-
 
 class FileBlock(Block):
     @property

@@ -69,8 +69,8 @@ class ModalBuilder(JsonObject):
             self.submit = None
             self.private_metadata = None
             self.callback_id = None
-            self.clear_on_close = False
-            self.notify_on_close = False
+            self.clear_on_close = None
+            self.notify_on_close = None
             self.external_id = None
 
     def __init__(self):
@@ -291,7 +291,7 @@ class ModalBuilder(JsonObject):
             label: PlainTextObject,
             element: Union[InteractiveElement, PlainTextElement],
             hint: Optional[str] = None,
-            optional: Optional[bool] = False,
+            optional: Optional[bool] = None,
             block_id: Optional[str] = None
     ):
         """A block that collects information from users - it can hold a
